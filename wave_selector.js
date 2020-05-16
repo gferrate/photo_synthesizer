@@ -13,11 +13,20 @@ class WaveSelector {
         this.dragging = false;
         this.offsetX = 0;
         this.offsetY = 0;
+        this.resizing = false;
+        this.resizingL = false;
+        this.resizingR = false;
+        this.resizingT = false;
+        this.resizingB = false;
+        this.xBeforeDragging = 0;
+        this.wBeforeDragging = 0;
+        this.yBeforeDragging = 0;
+        this.hBeforeDragging = 0;
     }
 
     mouse_in_range() {
-        if (mouseX > this.x && mouseX < this.x + this.w &&
-            mouseY > this.y && mouseY < this.y + this.h) {
+        if (mouseX > this.x - 5 && mouseX < this.x + this.w + 5 &&
+            mouseY > this.y - 5 && mouseY < this.y + this.h + 5) {
             return true;
         }
         return false;
@@ -61,19 +70,111 @@ class WaveSelector {
     }
 
     _update_coordinates() {
-        if (this.dragging) {
-            this.x = mouseX + this.offsetX;
-            this.y = mouseY + this.offsetY;
+        if (!this.resizing) {
+            if (this.dragging) {
+                this.x = mouseX + this.offsetX;
+                this.y = mouseY + this.offsetY;
+            }
         }
     }
 
+    _in_left_corner() {
+        if (mouseX > this.x - 5 &&
+            mouseX < this.x + 5 &&
+            mouseY > (this.y + this.h / 2) - 9 &&
+            mouseY < (this.y + this.h / 2) + 9) {
+            return true;
+        }
+        return false;
+    }
+
+    _in_right_corner() {
+        if (mouseX > this.x + this.w - 5 &&
+            mouseX < this.x + this.w + 5 &&
+            mouseY > (this.y + this.h / 2) - 9 &&
+            mouseY < (this.y + this.h / 2) + 9) {
+            return true;
+        }
+        return false;
+    }
+
+    _in_top_corner() {
+        if (mouseX > this.x + this.w / 2 - 9 &&
+            mouseX < this.x + this.w / 2 + 9 &&
+            mouseY > this.y - 5 &&
+            mouseY < this.y + 5) {
+            return true;
+        }
+        return false;
+    }
+
+    _in_bottom_corner() {
+        if (mouseX > this.x + this.w / 2 - 9 &&
+            mouseX < this.x + this.w / 2 + 9 &&
+            mouseY > this.y + this.h - 5 &&
+            mouseY < this.y + this.h + 5) {
+            return true;
+        }
+        return false;
+    }
+
+    _handle_resizing() {
+        if (this._in_left_corner() || this._in_right_corner() || this._in_top_corner() || this._in_bottom_corner()) {
+            cursor(CROSS);
+        }
+        if (this.resizingL) {
+            if (mouseX > this.xBeforeDragging + this.wBeforeDragging - 30) {
+                return
+            }
+            this.x = mouseX;
+            this.w = (this.xBeforeDragging - mouseX) + this.wBeforeDragging;
+            return
+        } else if (this.resizingR) {
+            if (mouseX < this.xBeforeDragging + 30) {
+                return
+            }
+            this.w = this.wBeforeDragging + (mouseX - (this.wBeforeDragging + this.xBeforeDragging));
+            return
+        } else if (this.resizingT) {
+            if (mouseY > this.yBeforeDragging + this.hBeforeDragging - 30) {
+                return
+            }
+            this.y = mouseY;
+            this.h = (this.yBeforeDragging - mouseY) + this.hBeforeDragging;
+            return
+        } else if (this.resizingB) {
+            if (mouseY < this.yBeforeDragging + 30) {
+                return
+            }
+            this.h = this.hBeforeDragging + (mouseY - (this.hBeforeDragging + this.yBeforeDragging));
+            return
+        }
+        if (this.dragging && this._in_left_corner()) {
+            this.resizingL = true;
+            this.resizing = true;
+        } else if (this.dragging && this._in_right_corner()) {
+            this.resizingR = true;
+            this.resizing = true;
+        } else if (this.dragging && this._in_top_corner()) {
+            this.resizingT = true;
+            this.resizing = true;
+        } else if (this.dragging && this._in_bottom_corner()) {
+            this.resizingB = true;
+            this.resizing = true;
+        } else {
+            this.resizing = false;
+        }
+    }
 
     draw() {
         if (this.mouse_in_range()) {
+            cursor('grab');
             this.rollover = true;
         } else {
+            cursor();
             this.rollover = false;
         }
+        this._handle_resizing();
         this._update_coordinates();
         this._draw_main_rectangle();
         this._draw_lateral_points();
