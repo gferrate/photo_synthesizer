@@ -1,12 +1,18 @@
 class WaveSelector {
-    constructor(w, h, x, y) {
+    constructor(w, h, x, y, c) {
         this.w = w;
         this.h = h;
         this.x = x;
         this.y = y;
-        this.color = color(10, 220, 10, 230);
-        this.rollover_color = color(10, 220, 10, 30);
-        this.dragging_color = color(10, 220, 10, 80);
+        if (c == 'green') {
+            this.color = color(10, 220, 10);
+            this.rollover_color = color(10, 220, 10, 30);
+            this.dragging_color = color(10, 220, 10, 80);
+        } else if (c == 'red') {
+            this.color = color(220, 10, 10);
+            this.rollover_color = color(220, 10, 10, 30);
+            this.dragging_color = color(220, 10, 10, 80);
+        }
         this.point_sep = 6;
         this.point_w = 5;
         this.rollover = false;
@@ -40,9 +46,15 @@ class WaveSelector {
         } else {
             noFill();
         }
-        strokeWeight(3);
+        strokeWeight(2);
         stroke(this.color);
         rect(this.x, this.y, this.w, this.h);
+    }
+
+    _draw_horizontal_line() {
+        strokeWeight(1);
+        stroke(this.color);
+        line(this.x, this.y + this.h / 2, this.x + this.w, this.y + this.h / 2);
     }
 
     _draw_lateral_points() {
@@ -118,6 +130,28 @@ class WaveSelector {
         return false;
     }
 
+    set_mouse_pressed() {
+        if (this.rollover) {
+            this.offsetX = this.x - mouseX;
+            this.offsetY = this.y - mouseY;
+            this.xBeforeDragging = this.x;
+            this.wBeforeDragging = this.w;
+            this.yBeforeDragging = this.y;
+            this.hBeforeDragging = this.h;
+            this.dragging = true;
+        }
+    }
+
+    set_mouse_released() {
+        this.dragging = false;
+        this.resizing = false;
+        this.resizingL = false;
+        this.resizingR = false;
+        this.resizingT = false;
+        this.resizingB = false;
+
+    }
+
     _handle_resizing() {
         if (this._in_left_corner() || this._in_right_corner() || this._in_top_corner() || this._in_bottom_corner()) {
             cursor(CROSS);
@@ -177,6 +211,7 @@ class WaveSelector {
         this._handle_resizing();
         this._update_coordinates();
         this._draw_main_rectangle();
+        this._draw_horizontal_line();
         this._draw_lateral_points();
     }
 }

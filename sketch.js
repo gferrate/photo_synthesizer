@@ -1,37 +1,29 @@
 var img;
 var waveSelector;
+var waveSelector2;
 
 function setup() {
   createCanvas(1200, 400);
   img = loadImage('assets/test.jpg');
-  waveSelector = new WaveSelector(130, 90, 120, 110);
+  waveSelector = new WaveSelector(130, 90, 120, 110, 'green');
+  waveSelector2 = new WaveSelector(130, 90, 200, 200, 'red');
 }
 
 function draw() {
   img.resize(600, 400);
   image(img, 0, 0);
   waveSelector.draw();
+  waveSelector2.draw();
 }
 
 
 function mousePressed() {
-  if (waveSelector.rollover) {
-    waveSelector.offsetX = waveSelector.x - mouseX;
-    waveSelector.offsetY = waveSelector.y - mouseY;
-    waveSelector.xBeforeDragging = waveSelector.x;
-    waveSelector.wBeforeDragging = waveSelector.w;
-    waveSelector.yBeforeDragging = waveSelector.y;
-    waveSelector.hBeforeDragging = waveSelector.h;
-    waveSelector.dragging = true;
-  }
+  waveSelector.set_mouse_pressed();
+  waveSelector2.set_mouse_pressed();
 }
 
 
 function mouseReleased() {
-  waveSelector.dragging = false;
-  waveSelector.resizing = false;
-  waveSelector.resizingL = false;
-  waveSelector.resizingR = false;
-  waveSelector.resizingT = false;
-  waveSelector.resizingB = false;
+  waveSelector.set_mouse_released();
+  waveSelector2.set_mouse_released();
 }
