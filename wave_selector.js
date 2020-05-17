@@ -13,8 +13,8 @@ class WaveSelector {
             this.rollover_color = color(220, 10, 10, 30);
             this.dragging_color = color(220, 10, 10, 80);
         }
-        this.point_sep = 6;
-        this.point_w = 5;
+        this.point_sep = 5;
+        this.point_w = 4;
         this.rollover = false;
         this.dragging = false;
         this.offsetX = 0;
@@ -28,6 +28,9 @@ class WaveSelector {
         this.wBeforeDragging = 0;
         this.yBeforeDragging = 0;
         this.hBeforeDragging = 0;
+        this.img = null;
+        this.notes = [];
+        this.raw_notes = [];
     }
 
     mouse_in_range() {
@@ -143,13 +146,15 @@ class WaveSelector {
     }
 
     set_mouse_released() {
+        if (this.resizing || this.dragging) {
+            this.analyze_image();
+        }
         this.dragging = false;
         this.resizing = false;
         this.resizingL = false;
         this.resizingR = false;
         this.resizingT = false;
         this.resizingB = false;
-
     }
 
     _handle_resizing() {
@@ -200,6 +205,58 @@ class WaveSelector {
         }
     }
 
+    _threshold_img(_img) {
+        for (var i = 0; i < _img.width; i++) {
+            for (var j = 0; j < _img.height; j++) {
+                var average = avg(_img.get(i, j).slice(1, 3));
+                if (average < image_threshold) {
+                    _img.set(i, j, 0);
+                } else {
+                    _img.set(i, j, 255);
+                }
+            }
+        }
+        _img.updatePixels();
+        return _img;
+    }
+
+    analyze_image() {
+        let img_slice = get(this.x, this.y, this.w, this.h);
+        img_slice = this._threshold_img(img_slice);
+        this.img = img_slice;
+        this.create_notes();
+    }
+
+    _draw_vert_line() {
+        strokeWeight(1);
+        line(this.x + noteIndex, this.y, this.x + noteIndex, this.y + this.h);
+        strokeWeight(5);
+        let offset = this.raw_notes[noteIndex];
+        if (offset != -1) {
+            point(this.x + noteIndex, this.y + offset);
+        }
+    }
+
+    create_notes() {
+        let min_freq = 16;
+        //let max_freq = 7902;
+        let max_freq = 3000;
+        this.raw_notes = [];
+        this.notes = [];
+        for (var i = 0; i < this.img.width; i++) {
+            let column = [];
+            for (var j = 0; j < this.img.height; j++) {
+                column.push(this.img.get(i, j)[0]);
+            }
+            let note_val = column.indexOf(0);
+            this.raw_notes.push(note_val);
+            if (note_val != -1) {
+                note_val = map(note_val, 0, this.img.height, max_freq, min_freq);
+            }
+            this.notes.push(note_val);
+        }
+    }
+
     draw() {
         if (this.mouse_in_range()) {
             cursor('grab');
@@ -208,10 +265,15 @@ class WaveSelector {
             cursor();
             this.rollover = false;
         }
+        if (this.img == null) {
+            this.analyze_image();
+        }
+        image(this.img, 600, 0);
         this._handle_resizing();
         this._update_coordinates();
         this._draw_main_rectangle();
         this._draw_horizontal_line();
         this._draw_lateral_points();
+        this._draw_vert_line();
     }
 }
