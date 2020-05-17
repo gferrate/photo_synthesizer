@@ -1,9 +1,11 @@
 class WaveSelector {
-    constructor(w, h, x, y, c) {
+    constructor(w, h, x, y, c, img_pos_x, img_pos_y) {
         this.w = w;
         this.h = h;
         this.x = x;
         this.y = y;
+        this.img_pos_x = img_pos_x;
+        this.img_pos_y = img_pos_y;
         if (c == 'green') {
             this.color = color(10, 220, 10);
             this.rollover_color = color(10, 220, 10, 30);
@@ -31,6 +33,7 @@ class WaveSelector {
         this.img = null;
         this.notes = [];
         this.raw_notes = [];
+        this.index = 0;
     }
 
     mouse_in_range() {
@@ -39,6 +42,11 @@ class WaveSelector {
             return true;
         }
         return false;
+    }
+
+    next_index() {
+        this.index = (this.index + 1) % this.w;
+        return this.index;
     }
 
     _draw_main_rectangle() {
@@ -221,7 +229,11 @@ class WaveSelector {
     }
 
     analyze_image() {
-        let img_slice = get(this.x, this.y, this.w, this.h);
+        let img_slice = img.get(
+            Math.round(this.x / 600 * img.width),
+            Math.round(this.y / 400 * img.height),
+            Math.round(this.w / 600 * img.width),
+            Math.round(this.h / 400 * img.height));
         img_slice = this._threshold_img(img_slice);
         this.img = img_slice;
         this.create_notes();
@@ -229,18 +241,19 @@ class WaveSelector {
 
     _draw_vert_line() {
         strokeWeight(1);
-        line(this.x + noteIndex, this.y, this.x + noteIndex, this.y + this.h);
+        line(this.x + this.index, this.y, this.x + this.index, this.y + this.h);
         strokeWeight(5);
-        let offset = this.raw_notes[noteIndex];
+        let offset = this.raw_notes[this.index];
         if (offset != -1) {
-            point(this.x + noteIndex, this.y + offset);
+            offset *= this.h;
+            point(this.x + this.index, this.y + offset);
         }
     }
 
     create_notes() {
         let min_freq = 16;
         //let max_freq = 7902;
-        let max_freq = 3000;
+        let max_freq = 2500;
         this.raw_notes = [];
         this.notes = [];
         for (var i = 0; i < this.img.width; i++) {
@@ -248,11 +261,13 @@ class WaveSelector {
             for (var j = 0; j < this.img.height; j++) {
                 column.push(this.img.get(i, j)[0]);
             }
-            let note_val = column.indexOf(0);
-            this.raw_notes.push(note_val);
-            if (note_val != -1) {
-                note_val = map(note_val, 0, this.img.height, max_freq, min_freq);
+            let raw_note = column.indexOf(0);
+            var note_val = raw_note;
+            if (raw_note != -1) {
+                raw_note /= this.img.height;
+                note_val = map(raw_note, 0, 1, max_freq, min_freq);
             }
+            this.raw_notes.push(raw_note);
             this.notes.push(note_val);
         }
     }
@@ -268,7 +283,7 @@ class WaveSelector {
         if (this.img == null) {
             this.analyze_image();
         }
-        image(this.img, 600, 0);
+        image(this.img, this.img_pos_x, this.img_pos_y);
         this._handle_resizing();
         this._update_coordinates();
         this._draw_main_rectangle();

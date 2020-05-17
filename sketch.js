@@ -1,13 +1,9 @@
 var img;
 var pitchWaveSelector;
-var pichWaveSelector;
+var ampWaveSelector;
 var image_threshold;
 let soundLoop;
-var playing = false;
 var osc;
-var noteIndex = 0;
-
-
 
 function preload() {
   img = loadImage('assets/test.jpg');
@@ -15,10 +11,16 @@ function preload() {
 
 function onSoundLoop(timeFromNow) {
   let notes = pitchWaveSelector.notes;
-  noteIndex = (soundLoop.iterations - 1) % notes.length;
-  let note = notes[noteIndex];
+  let amp_idx = ampWaveSelector.next_index();
+  let amplitude = ampWaveSelector.raw_notes[amp_idx];
+  if (amplitude != -1) {
+    amplitude = map(amplitude, 0, 1, 0.5, 0);
+  } else {
+    amplitude = 0.3;
+  }
+  let note = notes[pitchWaveSelector.next_index()];
   if (note != -1) {
-    osc.amp(1);
+    osc.amp(amplitude);
     osc.freq(note, 0.1);
   } else {
     osc.amp(0);
@@ -46,7 +48,7 @@ function calculate_threshold() {
       }
     }
   }
-  image_threshold = (_max + _min) / 2;
+  image_threshold = (_max + _min) / 2 - 20;
 }
 
 function setup() {
@@ -58,26 +60,27 @@ function setup() {
   osc.start();
   soundLoop = new p5.SoundLoop(onSoundLoop, intervalInSeconds);
   soundLoop.start();
-  pitchWaveSelector = new WaveSelector(130, 90, 120, 110, 'green');
-  //pichWaveSelector = new WaveSelector(130, 90, 200, 200, 'red');
+  pitchWaveSelector = new WaveSelector(130, 90, 120, 110, 'green', 600, 0);
+  ampWaveSelector = new WaveSelector(130, 90, 200, 200, 'red', 600, 100);
 }
 
 function draw() {
+  img.resize(600, 400);
   background(255);
   image(img, 0, 0, 600, 400);
   //userStartAudio();
   pitchWaveSelector.draw();
-  //pichWaveSelector.draw();
+  ampWaveSelector.draw();
 }
 
 
 function mousePressed() {
   pitchWaveSelector.set_mouse_pressed();
-  //pichWaveSelector.set_mouse_pressed();
+  ampWaveSelector.set_mouse_pressed();
 }
 
 
 function mouseReleased() {
   pitchWaveSelector.set_mouse_released();
-  //pichWaveSelector.set_mouse_released();
+  ampWaveSelector.set_mouse_released();
 }
