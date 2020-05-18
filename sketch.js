@@ -19,6 +19,7 @@ function onSoundLoop(timeFromNow) {
     amplitude = 0.3;
   }
   let note = notes[pitchWaveSelector.next_index()];
+  amplitude = amplitude || 0.3;
   if (note != -1) {
     osc.amp(amplitude);
     osc.freq(note, 0.1);
