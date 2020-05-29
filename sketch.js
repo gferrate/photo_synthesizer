@@ -22,7 +22,7 @@ function onSoundLoop(timeFromNow) {
   amplitude = amplitude || 0.3;
   if (note != -1) {
     osc.amp(amplitude);
-    osc.freq(note, 0.1);
+    osc.freq(note, 0.05);
   } else {
     osc.amp(0);
   }
@@ -53,6 +53,7 @@ function calculate_threshold() {
 }
 
 function setup() {
+  userStartAudio();
   var canvas = createCanvas(800, 400);
   canvas.parent('canvas');
   calculate_threshold();
@@ -61,15 +62,14 @@ function setup() {
   osc.start();
   soundLoop = new p5.SoundLoop(onSoundLoop, intervalInSeconds);
   soundLoop.start();
-  pitchWaveSelector = new WaveSelector(130, 90, 120, 110, 'green', 600, 0);
-  ampWaveSelector = new WaveSelector(130, 90, 200, 200, 'red', 600, 100);
+  pitchWaveSelector = new WaveSelector(130, 90, 23, 100, 'green', 600, 0);
+  ampWaveSelector = new WaveSelector(130, 90, 33, 231, 'red', 600, 100);
 }
 
 function draw() {
   img.resize(600, 400);
   background(255);
   image(img, 0, 0, 600, 400);
-  //userStartAudio();
   pitchWaveSelector.draw();
   ampWaveSelector.draw();
 }
